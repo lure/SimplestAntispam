@@ -6,7 +6,7 @@ local L = ptable.L
 local config = nil
 
 SimplestAntispam = {spamtable = {}, frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":", --throttler	  
-				    seen = {}, banned = {},  allowed = {}, isBattleField = false, 								 -- lowlevel filter
+				    seen = {}, banned = {},  allowed = {}, isBattleField = false, 								 --lowlevel filter
 					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true}
 				   }
 
@@ -115,24 +115,24 @@ local function myErrorFilter(self, event, msg, author, ...)
 	return false, msg, author, ...
 end
 
+--[[ ENABLE/DISABLE ]]--
+wipe(SimplestAntispam.allowed)
+for index=1, GetNumFriends() do
+	local name, level = GetFriendInfo(index)
+	SimplestAntispam.allowed[name] = level
+end	
 
 function SimplestAntispam:EnableEvents()
 	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")	
 	local frame = _G["ChatFrame1"]
 	frame.LurUI_AddMessage=frame.AddMessage
 	frame.AddMessage = hook_addMessage	
-				
 	
-	self.frame:RegisterEvent("FRIENDLIST_UPDATE")	
-	wipe(SimplestAntispam.allowed)
-	for index=1, GetNumFriends() do
-		local name, level = GetFriendInfo(index)
-		SimplestAntispam.allowed[name] = level
-	end	
+	self.frame:RegisterEvent("FRIENDLIST_UPDATE")				
 	SimplestAntispam.allowed[UnitName("player")] = 85
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)	
-	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 end 
 
 function SimplestAntispam:DisableEvents()

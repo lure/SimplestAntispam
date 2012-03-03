@@ -10,6 +10,6 @@
 ## X-Date: 2012-03-03
 ## X-Category: Chat
 
---localization.lua
+localization.lua
 core.lua
 options.lua

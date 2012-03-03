@@ -1,5 +1,4 @@
 ﻿local addonName, ptable = ...
-ptable.L = {enabled="включить", level="уровень", timedelta="задержка"}
 local L = ptable.L
 --[[ 
 	Thanks to LoseControl author Kouri for ideas and direction 
@@ -34,7 +33,7 @@ end)
 local function CreateSlider(text, parent, low, high, step)
 	local name = parent:GetName() .. text
 	local slider = CreateFrame("Slider", name, parent, "OptionsSliderTemplate")
-	slider:SetWidth(160)
+	slider:SetWidth(300)
 	slider:SetMinMaxValues(low, high)
 	slider:SetValueStep(step)
 	--_G[name .. "Text"]:SetText(text)
@@ -43,15 +42,16 @@ local function CreateSlider(text, parent, low, high, step)
 	return slider
 end
 
+local LZF = " %02d";
 local LevelSlider = CreateSlider(L["level"], OptionsPanel, 1, 85, 1)
 LevelSlider:SetScript("OnValueChanged", function(self, value)
-	_G[self:GetName() .. "Text"]:SetText(L["level"] .. " (" .. value .. ")")
+	_G[self:GetName() .. "Text"]:SetText(L["level"] .. LZF:format(value))
 	SimplestAntispamCharacterDB.LEVEL = value
 end)
-
+local LZTF = " %02dmin";
 local TimeSlider = CreateSlider(L["timedelta"], OptionsPanel, 1, 60, 1)
 TimeSlider:SetScript("OnValueChanged", function(self, value)
-	_G[self:GetName() .. "Text"]:SetText(L["timedelta"] .. " (" .. value .. "min)")
+	_G[self:GetName() .. "Text"]:SetText(L["timedelta"] .. LZTF:format(value))
 	SimplestAntispamCharacterDB.TIMEDELTA = value*60
 end)
 
@@ -60,7 +60,7 @@ title:SetPoint("TOPLEFT", 16, -16)
 subText:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
 Enable:SetPoint("TOPLEFT", subText, "BOTTOMLEFT", 0, -16)
 LevelSlider:SetPoint("TOPLEFT", Enable, "BOTTOMLEFT", 0, -24)
-TimeSlider:SetPoint("TOPLEFT", LevelSlider, "BOTTOMLEFT", 0, -24)
+TimeSlider:SetPoint("TOPLEFT", LevelSlider, "BOTTOMLEFT", 0, -28)
 
 OptionsPanel.refresh = function()
 	Enable:SetChecked(SimplestAntispamCharacterDB.enabled)
