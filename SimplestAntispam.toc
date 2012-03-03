@@ -1,7 +1,15 @@
-## Interface: 40300
-## Title: |cffee00ffSimplestAntispam|r
-## Notes: Removes repeating messages, raid target icon from general channels and stop low-level spammers
-## Version: 1.0
+﻿## Interface: 40300
+## Title: SimplestAntispam
+## Version: 2.0
 ## Author: Lur
+## Notes: Removes repeating messages, raid target icon from general channels and spam from low-level characters
+## Notes-ruRU: Вырезает из чата повторяющиеся сообщение, иконки целей и спам от низкоуровневых персонажей
+## Notes-enUS: Removes repeating messages, raid target icon from general channels and spam from low-level characters
+## Notes-deDE: Removes repeating messages, raid target icon from general channels and spam from low-level characters
+## SavedVariablesPerCharacter: SimplestAntispamCharacterDB
+## X-Date: 2012-03-03
+## X-Category: Chat
 
+--localization.lua
 core.lua
+options.lua
