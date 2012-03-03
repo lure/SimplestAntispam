@@ -1,6 +1,7 @@
 ﻿--[[ 
 	blocks repeating messages, allowing it appear with 1 min interval. 
 ]] --
+LurUI = LurUI and LurUI or {}
 LurUI.antispam = {spamtable = {}, 
 				  TIMEDELTA = 120, 
 				  frame = CreateFrame("Frame"),
@@ -16,8 +17,8 @@ local AS = LurUI.antispam
 AS.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 AS.frame:RegisterEvent("FRIENDLIST_UPDATE")
 AS.frame.ZONE_CHANGED_NEW_AREA = function(...)
-	LurUI.antispam.isBattlefield = GetNumBattlefieldStats() > 0
-	LurUI.antispam.spamtable = {}
+	AS.isBattlefield = GetNumBattlefieldStats() > 0
+	AS.spamtable = {}
 end
 
 AS.frame:SetScript("OnEvent", function(self, event, ...)
@@ -64,7 +65,6 @@ for index=1, GetNumFriends() do
 	AS.allowed[name] = level
 end	
 AS.frame.FRIENDLIST_UPDATE= function(...) 
-
 	for index=1, GetNumFriends() do
 		local name, level = GetFriendInfo(index)
 		if AS.seen[name] then
@@ -73,11 +73,11 @@ AS.frame.FRIENDLIST_UPDATE= function(...)
 			end
 			if (level < AS.LEVEL) then 
 				AS.banned[name] = ""
+			else
+				AS.allowed[name] = level -- no real reason to save level here, but why not?
 			end
-			AS.allowed[name] = level -- no real reason to save it here, but why not?
 		end
 	end
-
 end
 local function myChatFilter(self, event, msg, author, ...)
 	if #author==0 or AS.isBattleField then
