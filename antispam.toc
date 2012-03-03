@@ -1,0 +1,7 @@
+## Interface: 40300
+## Title: |cffee00ffSimplestAntispam|r
+## Notes: Removes repeating messages, raid target icon from general channels and stop low-level spammers
+## Version: 1.0
+## Author: Lur
+
+antispam.lua
