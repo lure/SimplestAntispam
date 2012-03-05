@@ -13,7 +13,6 @@ privateTable.L = setmetatable({enabled="Enable", level="Hide levels below", time
 end
 
 if (GetLocale() == "deDE") then 
-privateTable.L = setmetatable({enabled="Aktivieren", level="Hide Ebenen unterhalb", timedelta="Verzögerung die doppelten Nachrichten"},  
+privateTable.L = setmetatable({enabled="Aktivieren", level="Verstecken Ebenen unterhalb", timedelta="Verzögerung die doppelten Nachrichten"},  
 	{__index = function(table, index) return index end})
-	
 end
