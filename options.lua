@@ -1,5 +1,6 @@
 ﻿local addonName, ptable = ...
 local L = ptable.L
+local TempConfig = nil 
 --[[ 
 	Thanks to LoseControl author Kouri for ideas and direction 
 	http://forums.wowace.com/showthread.php?t=15763
@@ -7,7 +8,7 @@ local L = ptable.L
 ]]-- 
 local O = addonName .. "OptionsPanel"
 local OptionsPanel = CreateFrame("Frame", O)
-OptionsPanel.name=addonName
+OptionsPanel.name = addonName
 -- Title
 local title = OptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 title:SetText(addonName)
@@ -21,11 +22,11 @@ subText:SetText(notes)
 local Enable = CreateFrame("CheckButton", O.."Enable", OptionsPanel, "OptionsCheckButtonTemplate")
 _G[O.."EnableText"]:SetText(L["enabled"])
 Enable:SetScript("OnClick", function(self) 
-	SimplestAntispamCharacterDB.enabled = self:GetChecked() == 1 
-	if (SimplestAntispamCharacterDB.enabled) then 
-		SimplestAntispam:EnableEvents()
+	TempConfig.enabled = self:GetChecked() == 1 
+	if (TempConfig.enabled) then 
+		SimplestAntispam:Enable()
 	else 
-		SimplestAntispam:DisableEvents()
+		SimplestAntispam:Disable()
 	end
 end)
 
@@ -46,13 +47,13 @@ local LZF = " %02d";
 local LevelSlider = CreateSlider(L["level"], OptionsPanel, 1, 85, 1)
 LevelSlider:SetScript("OnValueChanged", function(self, value)
 	_G[self:GetName() .. "Text"]:SetText(L["level"] .. LZF:format(value))
-	SimplestAntispamCharacterDB.LEVEL = value
+	TempConfig.LEVEL = value
 end)
 local LZTF = " %02dmin";
 local TimeSlider = CreateSlider(L["timedelta"], OptionsPanel, 1, 60, 1)
 TimeSlider:SetScript("OnValueChanged", function(self, value)
 	_G[self:GetName() .. "Text"]:SetText(L["timedelta"] .. LZTF:format(value))
-	SimplestAntispamCharacterDB.TIMEDELTA = value*60
+	TempConfig.TIMEDELTA = value*60
 end)
 
 -- Control placement
@@ -63,13 +64,19 @@ LevelSlider:SetPoint("TOPLEFT", Enable, "BOTTOMLEFT", 0, -24)
 TimeSlider:SetPoint("TOPLEFT", LevelSlider, "BOTTOMLEFT", 0, -28)
 
 OptionsPanel.refresh = function()
-	Enable:SetChecked(SimplestAntispamCharacterDB.enabled)
-	LevelSlider:SetValue(SimplestAntispamCharacterDB.LEVEL)
-	TimeSlider:SetValue(SimplestAntispamCharacterDB.TIMEDELTA / 60)
+	TempConfig = CopyTable(SimplestAntispamCharacterDB)
+	Enable:SetChecked(TempConfig.enabled)
+	LevelSlider:SetValue(TempConfig.LEVEL)
+	TimeSlider:SetValue(TempConfig.TIMEDELTA / 60)
 end
 
 OptionsPanel.default = function() 
-	SimplestAntispamCharacterDB = CopyTable(AutoTurnIn.defaults)
+	TempConfig = CopyTable(AutoTurnIn.defaults)
 end
+
+OptionsPanel.okay = function()
+	SimplestAntispamCharacterDB = CopyTable(TempConfig)
+end
+
 
 InterfaceOptions_AddCategory(OptionsPanel)

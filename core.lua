@@ -9,6 +9,13 @@ SimplestAntispam = {spamtable = {}, frame = CreateFrame("Frame"), player = "|Hpl
 				    seen = {}, banned = {},  allowed = {}, isBattleField = false, 								 --lowlevel filter
 					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true}
 				   }
+				   
+function SimplestAntispam:ConsoleCommand(arg)
+	print("here")
+	InterfaceOptionsFrame_OpenToCategory(_G["SimplestAntispamOptionsPanel"])
+end
+SlashCmdList.SIMPLESTANTISPAM = SimplestAntispam.ConsoleCommand
+SLASH_SIMPLESTANTISPAM1 = '/sa'
 
 SimplestAntispam.frame:RegisterEvent("PLAYER_LOGIN")
 SimplestAntispam.frame.PLAYER_LOGIN = function(...)
@@ -17,9 +24,8 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 		_G.SimplestAntispamCharacterDB = CopyTable(SimplestAntispam.defaults)		
 		config = _G.SimplestAntispamCharacterDB
 	end
-	
 	if (config.enabled) then 
-		SimplestAntispam:EnableEvents()
+		SimplestAntispam:Enable()
 	end
 end
 
@@ -79,7 +85,7 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 end
 
 local function myChatFilter(self, event, msg, author, ...)
-	if #author==0 or SimplestAntispam.isBattleField then
+	if #author==0 or SimplestAntispam.isBattleField or config.LEVEL == 0 then
 		return false, msg, author, ...
 	end 
 	
@@ -122,26 +128,42 @@ for index=1, GetNumFriends() do
 	SimplestAntispam.allowed[name] = level
 end	
 
-function SimplestAntispam:EnableEvents()
+function SimplestAntispam:EnableThrottle()
 	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")	
 	local frame = _G["ChatFrame1"]
 	frame.LurUI_AddMessage=frame.AddMessage
 	frame.AddMessage = hook_addMessage	
-	
+end
+
+function SimplestAntispam:DisableThrottle()
+	self.frame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
+	local frame = _G["ChatFrame1"]
+	frame.AddMessage = frame.LurUI_AddMessage
+end
+
+function SimplestAntispam:EnableLevelFilter()
 	self.frame:RegisterEvent("FRIENDLIST_UPDATE")				
 	SimplestAntispam.allowed[UnitName("player")] = 85
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
-	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)	
-end 
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)		
+end
 
-function SimplestAntispam:DisableEvents()
-	self.frame:UnregisterAllEvents()
-	local frame = _G["ChatFrame1"]
-	frame.AddMessage = frame.LurUI_AddMessage	
+function SimplestAntispam:DisableLevelFilter()
+	self.frame:UnregisterEvent("FRIENDLIST_UPDATE")
 	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
 	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_YELL", myChatFilter)	
 	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
+end
+
+function SimplestAntispam:Enable()
+	self:EnableThrottle()
+	self:EnableLevelFilter()
+end 
+
+function SimplestAntispam:Disable()
+	self:DisableLevelFilter()
+	self:DisableThrottle()
 end
 
 --[[
