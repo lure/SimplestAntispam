@@ -18,17 +18,11 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 		config = _G.SimplestAntispamCharacterDB
 	end
 	
+	ShowFriends()
+	config.NeedInitialization = true
 	if (config.enabled) then 
 		SimplestAntispam:EnableEvents()
-	end
-	
-	wipe(SimplestAntispam.allowed)
-	SimplestAntispam.allowed[UnitName("player")] = 85
-	for index=1, GetNumFriends() do
-		local name, level = GetFriendInfo(index)
-		SimplestAntispam.allowed[name] = level
-		print(name)
-	end		
+	end	
 end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
@@ -70,7 +64,26 @@ local function hook_addMessage(self, text, ...)
 end
 
 --[[ SPAM REMOVER ]]--
-SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...) 
+SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
+
+	if (config.NeedInitialization) then 
+		wipe(SimplestAntispam.allowed)
+		SimplestAntispam.allowed[UnitName("player")] = 85
+		for index=1, GetNumFriends() do
+			local name, level = GetFriendInfo(index)
+			print(name)
+			if (name) then 
+				SimplestAntispam.allowed[name] = level 
+			end		
+		end	
+		config.NeedInitialization = false
+	end 
+	
+	--not our call. 
+	if not next(SimplestAntispam.seen) then 
+		return 
+	end
+	
 	for index=1, GetNumFriends() do
 		local name, level = GetFriendInfo(index)
 		if SimplestAntispam.seen[name] then
