@@ -71,7 +71,6 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 		SimplestAntispam.allowed[UnitName("player")] = 85
 		for index=1, GetNumFriends() do
 			local name, level = GetFriendInfo(index)
-			print(name)
 			if (name) then 
 				SimplestAntispam.allowed[name] = level 
 			end		
