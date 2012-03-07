@@ -24,9 +24,13 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 		_G.SimplestAntispamCharacterDB = CopyTable(SimplestAntispam.defaults)		
 		config = _G.SimplestAntispamCharacterDB
 	end
+	
+	ShowFriends()
+	config.NeedInitialization = true
 	if (config.enabled) then 
-		SimplestAntispam:Enable()
-	end
+		SimplestAntispam:EnableEvents()
+	end	
+>>>>>>> d7f358a6f78a59f0243ff83542360fc55560b10c
 end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
@@ -68,7 +72,25 @@ local function hook_addMessage(self, text, ...)
 end
 
 --[[ SPAM REMOVER ]]--
-SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...) 
+SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
+
+	if (config.NeedInitialization) then 
+		wipe(SimplestAntispam.allowed)
+		SimplestAntispam.allowed[UnitName("player")] = 85
+		for index=1, GetNumFriends() do
+			local name, level = GetFriendInfo(index)
+			if (name) then 
+				SimplestAntispam.allowed[name] = level 
+			end		
+		end	
+		config.NeedInitialization = false
+	end 
+	
+	--not our call. 
+	if not next(SimplestAntispam.seen) then 
+		return 
+	end
+	
 	for index=1, GetNumFriends() do
 		local name, level = GetFriendInfo(index)
 		if SimplestAntispam.seen[name] then
@@ -122,12 +144,6 @@ local function myErrorFilter(self, event, msg, author, ...)
 end
 
 --[[ ENABLE/DISABLE ]]--
-wipe(SimplestAntispam.allowed)
-for index=1, GetNumFriends() do
-	local name, level = GetFriendInfo(index)
-	SimplestAntispam.allowed[name] = level
-end	
-
 function SimplestAntispam:EnableThrottle()
 	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")	
 	local frame = _G["ChatFrame1"]
@@ -143,7 +159,6 @@ end
 
 function SimplestAntispam:EnableLevelFilter()
 	self.frame:RegisterEvent("FRIENDLIST_UPDATE")				
-	SimplestAntispam.allowed[UnitName("player")] = 85
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)		
