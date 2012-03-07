@@ -21,6 +21,14 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 	if (config.enabled) then 
 		SimplestAntispam:EnableEvents()
 	end
+	
+	wipe(SimplestAntispam.allowed)
+	SimplestAntispam.allowed[UnitName("player")] = 85
+	for index=1, GetNumFriends() do
+		local name, level = GetFriendInfo(index)
+		SimplestAntispam.allowed[name] = level
+		print(name)
+	end		
 end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
@@ -116,12 +124,6 @@ local function myErrorFilter(self, event, msg, author, ...)
 end
 
 --[[ ENABLE/DISABLE ]]--
-wipe(SimplestAntispam.allowed)
-for index=1, GetNumFriends() do
-	local name, level = GetFriendInfo(index)
-	SimplestAntispam.allowed[name] = level
-end	
-
 function SimplestAntispam:EnableEvents()
 	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")	
 	local frame = _G["ChatFrame1"]
@@ -129,7 +131,6 @@ function SimplestAntispam:EnableEvents()
 	frame.AddMessage = hook_addMessage	
 	
 	self.frame:RegisterEvent("FRIENDLIST_UPDATE")				
-	SimplestAntispam.allowed[UnitName("player")] = 85
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)	
