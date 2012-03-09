@@ -5,7 +5,7 @@ local addonName, ptable = ...
 local L = ptable.L
 local config = nil
 
-SimplestAntispam = {spamtable = {}, frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":", --throttler	  
+SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":", --throttler	  
 				    seen = {}, banned = {},  allowed = {}, isBattleField = false, 								 --lowlevel filter
 					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true}
 				   }
@@ -33,7 +33,12 @@ end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
 	SimplestAntispam.isBattlefield = GetNumBattlefieldStats() > 0
-	SimplestAntispam.spamtable = {}
+	for i=1,NUM_CHAT_WINDOWS do
+		local frame = _G["ChatFrame"..i]
+		if (frame ~= COMBATLOG) and frame.spamtable then 
+			wipe(frame.spamtable)
+		end
+	end	
 end
 
 SimplestAntispam.frame:SetScript("OnEvent", function(self, event, ...)
@@ -57,9 +62,9 @@ local function hook_addMessage(self, text, ...)
 			msg = msg:upper()  -- uppercase it
 			
 			local current = time()
-			local value = SimplestAntispam.spamtable[msg]
+			local value = self.spamtable[msg]
 			if (not value) or ((current-value) > config.TIMEDELTA) then
-				SimplestAntispam.spamtable[msg] = current
+				self.spamtable[msg] = current
 				local txt = text:gsub("|T%S+|t", "")
 				self:LurUI_AddMessage(txt, ...)
 			end		
@@ -135,8 +140,10 @@ local function myErrorFilter(self, event, msg, author, ...)
 	for k in pairs(SimplestAntispam.seen) do	
 		if msg == format(ERR_FRIEND_ADDED_S, k) then
 			return true
-		end 	
-
+		end
+		if msg == format(ERR_FRIEND_OFFLINE_S, k) then 
+			return true
+		end
 		if msg == format(ERR_FRIEND_REMOVED_S, k) then 
 			SimplestAntispam.seen[k] = nil
 			return true
@@ -148,9 +155,16 @@ end
 --[[ ENABLE/DISABLE ]]--
 function SimplestAntispam:EnableThrottle()
 	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")	
-	local frame = _G["ChatFrame1"]
-	frame.LurUI_AddMessage=frame.AddMessage
-	frame.AddMessage = hook_addMessage	
+	
+	-- handling every window except combat log
+	for i=1,NUM_CHAT_WINDOWS do
+		local frame = _G["ChatFrame"..i]
+		if (frame ~= COMBATLOG) then 
+			frame.LurUI_AddMessage=frame.AddMessage
+			frame.AddMessage = hook_addMessage
+			frame.spamtable = {}
+		end
+	end
 end
 
 function SimplestAntispam:DisableThrottle()
@@ -189,4 +203,17 @@ debug shortcuts =)
 /run for i,k in pairs(SimplestAntispam.seen) do print(i) end	
 /run for i,k in pairs(SimplestAntispam.allowed) do print(i) end	
 |Hlcopy|h01:45:04|h |Hchannel:channel:4|h[4]|h |Hplayer:Онеоне:817:CHANNEL:4|h[|cff0070ddОнеоне|r]|h: |TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|t|TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|tВ статик ДД10 3\8 Хм (рт пн-чт с 20.45-00) нид: ШП 390+ил - вступление в гильдию(25лвл) |TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|t™
+LOOT_ROLL_ROLLED_DE = "Disenchant Roll - %d for %s by %s";
+LOOT_ROLL_ROLLED_GREED = "Greed Roll - %d for %s by %s";
+LOOT_ROLL_ROLLED_NEED = "Need Roll - %d for %s by %s";
+
+
+17:13:20 Результат броска Хенни ("Нужно") за предмет [Окаменевшее грибное сердце]: 176 с бонусом роли.
+17:13:20 Тхалиса выигрывает: [Окаменевшее грибное сердце]
+17:13:21 Тхалиса получает добычу: [Окаменевшее грибное сердце].
+
+17:10:15 Итазурана отказывается от предмета [Окаменевшее грибное сердце].
+17:10:10 Разыгрывается: [Отделанные мохом наплечные щитки]. Швюрбиц: "Распылить".
+17:10:07 Разыгрывается: [Отделанные мохом наплечные щитки]. Куф: "Не откажусь".
+17:09:56 Разыгрывается: [Окаменевшее грибное сердце]. Хенни: "Мне это нужно".
 ]]--
