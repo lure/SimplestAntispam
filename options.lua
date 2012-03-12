@@ -71,7 +71,7 @@ OptionsPanel.refresh = function()
 end
 
 OptionsPanel.default = function() 
-	TempConfig = CopyTable(AutoTurnIn.defaults)
+	TempConfig = CopyTable(SimplestAntispam.defaults)
 end
 
 OptionsPanel.okay = function()
