@@ -24,10 +24,10 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 		config = _G.SimplestAntispamCharacterDB
 	end
 	
-	ShowFriends()
 	config.NeedInitialization = true
+	ShowFriends()
 	if (config.enabled) then
-		SimplestAntispam:Enable()
+		SimplestAntispam:EnableThrottle()
 	end	
 end
 
@@ -87,9 +87,11 @@ end
 
 --[[ SPAM REMOVER ]]--
 SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
-
 	if (config.NeedInitialization) then 
 		SimplestAntispam:InitAllowed()
+		if (config.enabled) then
+			SimplestAntispam:EnableLevelFilter()
+		end	
 		config.NeedInitialization = false
 	end 
 	
