@@ -212,23 +212,26 @@ function SimplestAntispam:Disable()
 	self:DisableThrottle()
 end
 
+--[[ LOOT DISTRIBUTION MESSAGES HIDER ]]--
+ local function SystemLootFilter(self, event, msg, author, ...)
+	if (strfind(msg, L[SELF]) or strfind(msg, L[SELF_AP])) then 
+		return false, msg, author, ...
+	end 
+	
+	if (strfind(msg, L[CHOICE_DE]) or strfind(msg, L[CHOICE_GR]) or strfind(msg, L[CHOICE_NE]) or strfind(msg, L[CHOICE_PA])) then 
+		return true
+	end
+	
+	if (strfind(msg, L[ROLL_DE]) or strfind(msg, L[ROLL_GR]) or strfind(msg, L[ROLL_NE])) then 
+		return true
+	end	
+	return false, msg, author, ...
+end
+ChatFrame_AddMessageEventFilter("CHAT_MSG_LOOT", SystemLootFilter)
 --[[
 debug shortcuts =)
 /run for i,k in pairs(SimplestAntispam.banned) do print(i) end	
 /run for i,k in pairs(SimplestAntispam.seen) do print(i) end	
 /run for i,k in pairs(SimplestAntispam.allowed) do print(i) end	
 |Hlcopy|h01:45:04|h |Hchannel:channel:4|h[4]|h |Hplayer:Онеоне:817:CHANNEL:4|h[|cff0070ddОнеоне|r]|h: |TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|t|TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|tВ статик ДД10 3\8 Хм (рт пн-чт с 20.45-00) нид: ШП 390+ил - вступление в гильдию(25лвл) |TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|t™
-LOOT_ROLL_ROLLED_DE = "Disenchant Roll - %d for %s by %s";
-LOOT_ROLL_ROLLED_GREED = "Greed Roll - %d for %s by %s";
-LOOT_ROLL_ROLLED_NEED = "Need Roll - %d for %s by %s";
-
-22:53:05 Вы отказались от предмета: [Шплинтованные поножи]
-17:13:20 Результат броска Хенни ("Нужно") за предмет [Окаменевшее грибное сердце]: 176 с бонусом роли.
-17:13:20 Тхалиса выигрывает: [Окаменевшее грибное сердце]
-17:13:21 Тхалиса получает добычу: [Окаменевшее грибное сердце].
-
-17:10:15 Итазурана отказывается от предмета [Окаменевшее грибное сердце].
-17:10:10 Разыгрывается: [Отделанные мохом наплечные щитки]. Швюрбиц: "Распылить".
-17:10:07 Разыгрывается: [Отделанные мохом наплечные щитки]. Куф: "Не откажусь".
-17:09:56 Разыгрывается: [Окаменевшее грибное сердце]. Хенни: "Мне это нужно".
 ]]--
