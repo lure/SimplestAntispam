@@ -46,6 +46,7 @@ SimplestAntispam.frame:SetScript("OnEvent", function(self, event, ...)
     self[event](...)
 end)
 
+--[[ CHAT THROTTLER ]]--
 -- Here we maintain the hashmap where key is a text and value - it's timestamp.
 -- copy this to chat to see stored messages /run table.foreach(SimplestAntispam.spamtable, print) 
 local YELLPATTERN = CHAT_YELL_GET:format("|r]|h").."(.+)" --"|r]|h кричит: (.+)"
@@ -75,6 +76,8 @@ local function hook_addMessage(self, text, ...)
 	end
 end
 
+
+--[[ LOW LEVEL SPAM REMOVER ]]--
 function SimplestAntispam:InitAllowed(clean)
 	if ( clean ) then
 		wipe(self.allowed)
@@ -90,7 +93,6 @@ function SimplestAntispam:InitAllowed(clean)
 	end
 end
 
---[[ SPAM REMOVER ]]--
 SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 
 	if (config.NeedInitialization) then 
