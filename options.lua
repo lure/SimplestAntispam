@@ -44,7 +44,7 @@ local function CreateSlider(text, parent, low, high, step)
 end
 
 local LZF = " %02d";
-local LevelSlider = CreateSlider(L["level"], OptionsPanel, 1, 85, 1)
+local LevelSlider = CreateSlider(L["level"], OptionsPanel, 0, 85, 1)
 LevelSlider:SetScript("OnValueChanged", function(self, value)
 	_G[self:GetName() .. "Text"]:SetText(L["level"] .. LZF:format(value))
 	TempConfig.LEVEL = value

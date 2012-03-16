@@ -28,7 +28,8 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 	ShowFriends()
 	if (config.enabled) then
 		SimplestAntispam:EnableThrottle()
-	end	
+		SimplestAntispam:EnableLevelFilter()
+	end
 end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
@@ -74,12 +75,14 @@ local function hook_addMessage(self, text, ...)
 	end
 end
 
-function SimplestAntispam:InitAllowed()
-	wipe(self.allowed)
-	self.allowed[UnitName("player")] = 85
+function SimplestAntispam:InitAllowed(clean)
+	if ( clean ) then 
+		wipe(self.allowed)
+		self.allowed[UnitName("player")] = 85
+	end
 	for index=1, GetNumFriends() do
 		local name, level = GetFriendInfo(index)
-		if (name) then
+		if ( name ) then
 			self.allowed[name] = level
 		end
 	end
@@ -87,22 +90,21 @@ end
 
 --[[ SPAM REMOVER ]]--
 SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
+
 	if (config.NeedInitialization) then 
-		SimplestAntispam:InitAllowed()
-		if (config.enabled) then
-			SimplestAntispam:EnableLevelFilter()
-		end	
+		SimplestAntispam:InitAllowed(true)
 		config.NeedInitialization = false
 	end 
 	
-	--not our call. 
-	if not next(SimplestAntispam.seen) then 
+	--not our call, but some players may be added to friend list. 
+	if not next(SimplestAntispam.seen) then
+		SimplestAntispam:InitAllowed(false)
 		return 
 	end
 	
-	for index=1, GetNumFriends() do
-		local name, level = GetFriendInfo(index)
-		if SimplestAntispam.seen[name] then
+	for name,_ in pairs(SimplestAntispam.seen) do 
+		local name, level = GetFriendInfo(name)
+		if ( name ) then 
 			if (not SimplestAntispam.allowed[name]) and (not SimplestAntispam.banned[name]) then 
 				RemoveFriend(name)		
 			end
@@ -110,22 +112,29 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 				SimplestAntispam.banned[name] = ""
 			else
 				SimplestAntispam.allowed[name] = level -- no real reason to save level here, but why not?
-			end
-		end
-	end
+			end		
+		end 
+	end	
 end
 
 local function myChatFilter(self, event, msg, author, ...)
 	if #author==0 or SimplestAntispam.isBattleField or config.LEVEL == 0 then
 		return false, msg, author, ...
 	end 
-	
+
 	if (SimplestAntispam.banned[author]) then 
 		return true
 	elseif (SimplestAntispam.allowed[author]) then 
 		return false, msg, author, ...
 	end
-	
+
+	-- maybe player just added this guy to the list manually. 
+	local name, level = GetFriendInfo(author)
+	if ( name ) and ( not SimplestAntispam.seen[author] ) then 
+		SimplestAntispam.allowed[author] = level
+		return false, msg, author, ...
+	end
+
 	--UnitLevel usually doesn't work 
 	if not SimplestAntispam.seen[author] then 		
 		SimplestAntispam.seen[author]=""
