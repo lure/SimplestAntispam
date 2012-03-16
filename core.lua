@@ -5,8 +5,8 @@ local addonName, ptable = ...
 local L = ptable.L
 local config = nil
 
-SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":", --throttler	  
-				    seen = {}, banned = {},  allowed = {}, isBattleField = false, 								 --lowlevel filter
+SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":",    	--throttler	  
+				    seen = {}, banned = {},  allowed = {}, isBattleField = false, lastFriendsCount=0,	--lowlevel filter
 					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true}
 				   }
 				   
@@ -76,10 +76,12 @@ local function hook_addMessage(self, text, ...)
 end
 
 function SimplestAntispam:InitAllowed(clean)
-	if ( clean ) then 
+	if ( clean ) then
 		wipe(self.allowed)
 		self.allowed[UnitName("player")] = 85
 	end
+	
+	self.lastFriendsCount = GetNumFriends()
 	for index=1, GetNumFriends() do
 		local name, level = GetFriendInfo(index)
 		if ( name ) then
@@ -96,8 +98,8 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 		config.NeedInitialization = false
 	end 
 	
-	--not our call, but some players may be added to friend list. 
-	if not next(SimplestAntispam.seen) then
+	--not our call.  User added a friend manually
+	if not next(SimplestAntispam.seen) and ( SimplestAntispam.lastFriendsCount ~= GetNumFriends() )then
 		SimplestAntispam:InitAllowed(false)
 		return 
 	end
