@@ -9,10 +9,10 @@ SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName
 				    seen = {}, banned = {},  allowed = {}, isBattleField = false, lastFriendsCount=0,	--lowlevel filter
 					
 					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true,
-								loot={wpass=true, wneed=true, wgreed=true, wdis=true,
-									  wrneed=true, wrgreed=true, wrdis=true,					
-									  rpass=true, rneed=true, rgreed=true, rdis=true,
-									  rrneed=true, rrgreed=true, rrdis=true}
+								loot={wpass=true, wneed=false, wgreed=true, wdis=true,
+									  wrneed=false, wrgreed=true, wrdis=true,					
+									  rpass=true, rneed=false, rgreed=true, rdis=true,
+									  rrneed=true, rrgreed=false, rrdis=true}
 								}}
 				   
 function SimplestAntispam:ConsoleCommand(arg)
@@ -260,6 +260,7 @@ end
 end
 ChatFrame_AddMessageEventFilter("CHAT_MSG_LOOT", SystemLootFilter)
 --[[
+https://github.com/Xruptor/xanMiniRolls/issues/1
 debug shortcuts =)
 /run for i,k in pairs(SimplestAntispam.banned) do print(i) end	
 /run for i,k in pairs(SimplestAntispam.seen) do print(i) end	

@@ -78,35 +78,35 @@ end
 local PartyOptionPanel = CreateFrame("Frame", O.."PartyOptionsPanel",  OptionsPanel, "OptionsBoxTemplate")
 PartyOptionPanel:SetWidth(590)
 PartyOptionPanel:SetHeight(90) 
-_G[PartyOptionPanel:GetName().."Title"]:SetText("Hide loot decisions and rolls for party");
-CreateLabel(PartyOptionPanel, 8, 30, "decision")
-CreateLabel(PartyOptionPanel, 8, -10, "roll")
+_G[PartyOptionPanel:GetName().."Title"]:SetText(L["partylootheader"])
+CreateLabel(PartyOptionPanel, 8, 30, L["decision"])
+CreateLabel(PartyOptionPanel, 8, -10, L["roll"])
 
-CreateCheckbox("wdis", PartyOptionPanel, 5, 11, "disenchant")
-CreateCheckbox("wneed", PartyOptionPanel, 150, 11, "need")
-CreateCheckbox("wgreed", PartyOptionPanel, 295, 11, "greed")
-CreateCheckbox("wpass", PartyOptionPanel, 440, 11, "pass")
+CreateCheckbox("wdis", PartyOptionPanel, 5, 11, L["disenchant"])
+CreateCheckbox("wneed", PartyOptionPanel, 150, 11, L["need"])
+CreateCheckbox("wgreed", PartyOptionPanel, 295, 11, L["greed"])
+CreateCheckbox("wpass", PartyOptionPanel, 440, 11, L["pass"])
 
-CreateCheckbox("wrdis", PartyOptionPanel, 5, -28, "disenchant")
-CreateCheckbox("wrneed", PartyOptionPanel, 150, -28, "need")
-CreateCheckbox("wrgreed", PartyOptionPanel, 295, -28, "greed")
+CreateCheckbox("wrdis", PartyOptionPanel, 5, -28, L["disenchant"])
+CreateCheckbox("wrneed", PartyOptionPanel, 150, -28, L["need"])
+CreateCheckbox("wrgreed", PartyOptionPanel, 295, -28, L["greed"])
 
 
 local RaidOptionPanel = CreateFrame("Frame", O.."RaidOptionsPanel",  OptionsPanel, "OptionsBoxTemplate")
 RaidOptionPanel:SetWidth(590)
 RaidOptionPanel:SetHeight(90) 
-_G[RaidOptionPanel:GetName().."Title"]:SetText("Hide loot decisions and rolls for raids");
-CreateLabel(RaidOptionPanel, 8, 30, "decision")
-CreateLabel(RaidOptionPanel, 8, -10, "roll")
+_G[RaidOptionPanel:GetName().."Title"]:SetText(L["raidlootheader"])
+CreateLabel(RaidOptionPanel, 8, 30, L["decision"])
+CreateLabel(RaidOptionPanel, 8, -10, L["roll"])
 
-CreateCheckbox("rdis", RaidOptionPanel, 5, 11, "disenchant")
-CreateCheckbox("rneed", RaidOptionPanel, 150, 11, "need")
-CreateCheckbox("rgreed", RaidOptionPanel, 295, 11, "greed")
-CreateCheckbox("rpass", RaidOptionPanel, 440, 11, "pass")
+CreateCheckbox("rdis", RaidOptionPanel, 5, 11, L["disenchant"])
+CreateCheckbox("rneed", RaidOptionPanel, 150, 11, L["need"])
+CreateCheckbox("rgreed", RaidOptionPanel, 295, 11, L["greed"])
+CreateCheckbox("rpass", RaidOptionPanel, 440, 11, L["pass"])
 
-CreateCheckbox("rrdis", RaidOptionPanel, 5, -28, "disenchant")
-CreateCheckbox("rrneed", RaidOptionPanel, 150, -28, "need")
-CreateCheckbox("rrgreed", RaidOptionPanel, 295, -28, "greed")
+CreateCheckbox("rrdis", RaidOptionPanel, 5, -28, L["disenchant"])
+CreateCheckbox("rrneed", RaidOptionPanel, 150, -28, L["need"])
+CreateCheckbox("rrgreed", RaidOptionPanel, 295, -28, L["greed"])
 
 
 --[[ Control placement ]]--
@@ -145,10 +145,12 @@ end
 
 OptionsPanel.default = function() 
 	TempConfig = CopyTable(SimplestAntispam.defaults)
+	TempConfig.loot = CopyTable(SimplestAntispam.defaults.loot)
 end
 
 OptionsPanel.okay = function()
 	SimplestAntispamCharacterDB = CopyTable(TempConfig)
+	SimplestAntispamCharacterDB.loot = CopyTable(TempConfig.loot)
 end
 
 
