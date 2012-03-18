@@ -7,8 +7,13 @@ local config = nil
 
 SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":",    	--throttler	  
 				    seen = {}, banned = {},  allowed = {}, isBattleField = false, lastFriendsCount=0,	--lowlevel filter
-					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true}
-				   }
+					
+					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true,
+								loot={wpass=true, wneed=true, wgreed=true, wdis=true,
+									  wrneed=true, wrgreed=true, wrdis=true,					
+									  rpass=true, rneed=true, rgreed=true, rdis=true,
+									  rrneed=true, rrgreed=true, rrdis=true}
+								}}
 				   
 function SimplestAntispam:ConsoleCommand(arg)
 	InterfaceOptionsFrame_OpenToCategory(_G["SimplestAntispamOptionsPanel"])
@@ -22,6 +27,9 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 	if (config == nil) then 
 		_G.SimplestAntispamCharacterDB = CopyTable(SimplestAntispam.defaults)		
 		config = _G.SimplestAntispamCharacterDB
+	end
+	if not config.loot then 
+		config.loot = CopyTable(SimplestAntispam.defaults.loot)
 	end
 	
 	config.NeedInitialization = true
@@ -214,17 +222,40 @@ end
 
 --[[ LOOT DISTRIBUTION MESSAGES HIDER ]]--
  local function SystemLootFilter(self, event, msg, author, ...)
-	if (strfind(msg, L[SELF]) or strfind(msg, L[SELF_AP])) then 
+	if (strfind(msg, L["SELF"]) or strfind(msg, L["SELF_AP"])) then 
 		return false, msg, author, ...
 	end 
+	local c = config.loot
 	
-	if (strfind(msg, L[CHOICE_DE]) or strfind(msg, L[CHOICE_GR]) or strfind(msg, L[CHOICE_NE]) or strfind(msg, L[CHOICE_PA])) then 
-		return true
-	end
-	
-	if (strfind(msg, L[ROLL_DE]) or strfind(msg, L[ROLL_GR]) or strfind(msg, L[ROLL_NE])) then 
-		return true
-	end	
+	if ( GetNumRaidMembers() > 0 and (c.rdis or c.rgreed or c.rneed or c.rpass or c.rrneed or c.rrgreed or c.rrdis) ) then 	
+		-- decisions 
+		if ( ( c.rdis and strfind(msg, L["CHOICE_DE"]) ) or 
+			 ( c.rgreed and strfind(msg, L["CHOICE_GR"]) ) or 
+			 ( c.rneed and strfind(msg, L["CHOICE_NE"]) ) or 
+			 ( c.rpass and strfind(msg, L["CHOICE_PA"])) ) then 
+			return true
+		end	
+		-- rolls
+		if ( ( c.rrdis and strfind(msg, L["ROLL_DE"]) ) or 
+			 ( c.rrgreed and strfind(msg, L["ROLL_GR"]) ) or 
+			 ( c.rrneed and strfind(msg, L["ROLL_NE"]) ) ) then 
+			return true
+		end	
+	elseif ( GetNumPartyMembers() > 0 and (c.wpass or c.wneed or c.wgreed or c.wdis or c.wrneed or c.wrgreed or c.wrdis) ) then 		
+		if ( ( c.wdis and strfind(msg, L["CHOICE_DE"]) ) or 
+			 ( c.wgreed and strfind(msg, L["CHOICE_GR"]) ) or 
+			 ( c.wneed and strfind(msg, L["CHOICE_NE"]) ) or 
+			 ( c.wpass and strfind(msg, L["CHOICE_PA"]) ) ) then 
+			return true
+		end	
+		
+		if ( ( c.wrdis and strfind(msg, L["ROLL_DE"]) ) or 
+		     ( c.wrgreed and strfind(msg, L["ROLL_GR"]) ) or 
+			 ( c.wrneed and strfind(msg, L["ROLL_NE"]) ) ) then 
+			return true
+		end	
+	end 	
+
 	return false, msg, author, ...
 end
 ChatFrame_AddMessageEventFilter("CHAT_MSG_LOOT", SystemLootFilter)
