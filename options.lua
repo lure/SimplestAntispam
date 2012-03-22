@@ -24,12 +24,7 @@ subText:SetText(notes)
 local Enable = CreateFrame("CheckButton", O.."Enable", OptionsPanel, "OptionsCheckButtonTemplate")
 _G[Enable:GetName().."Text"]:SetText(L["enabled"])
 Enable:SetScript("OnClick", function(self) 
-	TempConfig.enabled = self:GetChecked() == 1 
-	if (TempConfig.enabled) then 
-		SimplestAntispam:Enable()
-	else 
-		SimplestAntispam:Disable()
-	end
+	TempConfig.enabled = self:GetChecked() == 1
 end)
 
 -- Slider helper function, thanks to Kollektiv, LoseControl
@@ -149,6 +144,14 @@ OptionsPanel.default = function()
 end
 
 OptionsPanel.okay = function()
+	if (TempConfig.enabled ~= SimplestAntispamCharacterDB.enabled) then
+		if ( TempConfig.enabled ) then 
+			SimplestAntispam:Enable()
+		else 
+			SimplestAntispam:Disable()
+		end
+	end
+	
 	SimplestAntispamCharacterDB = CopyTable(TempConfig)
 	SimplestAntispamCharacterDB.loot = CopyTable(TempConfig.loot)
 end

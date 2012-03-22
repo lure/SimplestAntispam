@@ -3,7 +3,6 @@
 ]] --
 local addonName, ptable = ...
 local L = ptable.L
-local config = nil
 
 SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":",    	--throttler	  
 				    seen = {}, banned = {},  allowed = {}, isBattleField = false, lastFriendsCount=0,	--lowlevel filter
@@ -22,19 +21,17 @@ SlashCmdList.SIMPLESTANTISPAM = SimplestAntispam.ConsoleCommand
 SLASH_SIMPLESTANTISPAM1 = '/sa'
 
 SimplestAntispam.frame:RegisterEvent("PLAYER_LOGIN")
-SimplestAntispam.frame.PLAYER_LOGIN = function(...)
-	config = _G.SimplestAntispamCharacterDB
-	if (config == nil) then 
-		_G.SimplestAntispamCharacterDB = CopyTable(SimplestAntispam.defaults)		
-		config = _G.SimplestAntispamCharacterDB
+SimplestAntispam.frame.PLAYER_LOGIN = function(...)	
+	if (SimplestAntispamCharacterDB == nil) then 
+		_G.SimplestAntispamCharacterDB = CopyTable(SimplestAntispam.defaults)			
 	end
-	if not config.loot then 
-		config.loot = CopyTable(SimplestAntispam.defaults.loot)
+	if not SimplestAntispamCharacterDB.loot then 
+		SimplestAntispamCharacterDB.loot = CopyTable(SimplestAntispam.defaults.loot)
 	end
 	
-	config.NeedInitialization = true
+	SimplestAntispamCharacterDB.NeedInitialization = true
 	ShowFriends()
-	if (config.enabled) then
+	if (SimplestAntispamCharacterDB.enabled) then
 		SimplestAntispam:EnableThrottle()
 		SimplestAntispam:EnableLevelFilter()
 	end
@@ -73,7 +70,7 @@ local function hook_addMessage(self, text, ...)
 			
 			local current = time()
 			local value = self.spamtable[msg]
-			if (not value) or ((current-value) > config.TIMEDELTA) then
+			if (not value) or ((current-value) > SimplestAntispamCharacterDB.TIMEDELTA) then
 				self.spamtable[msg] = current
 				local txt = text:gsub("|T%S+|t", "")
 				self:LurUI_AddMessage(txt, ...)
@@ -103,9 +100,9 @@ end
 
 SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 
-	if (config.NeedInitialization) then 
+	if (SimplestAntispamCharacterDB.NeedInitialization) then 
 		SimplestAntispam:InitAllowed(true)
-		config.NeedInitialization = false
+		SimplestAntispamCharacterDB.NeedInitialization = false
 	end 
 	
 	--not our call.  User added a friend manually
@@ -120,7 +117,7 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 			if (not SimplestAntispam.allowed[name]) and (not SimplestAntispam.banned[name]) then 
 				RemoveFriend(name)		
 			end
-			if (level < config.LEVEL) then 
+			if (level < SimplestAntispamCharacterDB.LEVEL) then 
 				SimplestAntispam.banned[name] = ""
 			else
 				SimplestAntispam.allowed[name] = level -- no real reason to save level here, but why not?
@@ -130,7 +127,7 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 end
 
 local function myChatFilter(self, event, msg, author, ...)
-	if #author==0 or SimplestAntispam.isBattleField or config.LEVEL == 0 then
+	if #author==0 or SimplestAntispam.isBattleField or SimplestAntispamCharacterDB.LEVEL == 0 then
 		return false, msg, author, ...
 	end 
 
@@ -225,7 +222,7 @@ end
 	if (strfind(msg, L["SELF"]) or strfind(msg, L["SELF_AP"])) then 
 		return false, msg, author, ...
 	end 
-	local c = config.loot
+	local c = SimplestAntispamCharacterDB.loot
 	
 	if ( GetNumRaidMembers() > 0 and (c.rdis or c.rgreed or c.rneed or c.rpass or c.rrneed or c.rrgreed or c.rrdis) ) then 	
 		-- decisions 
