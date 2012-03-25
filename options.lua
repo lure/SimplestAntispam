@@ -5,8 +5,6 @@ local TempConfig = nil
 	Thanks to LoseControl author Kouri for ideas and direction 
 	http://forums.wowace.com/showthread.php?t=15763
 	http://www.wowwiki.com/UI_Object_UIDropDownMenu
-	группа -> выбор( [] нид [] грид [] пас ) ролл ( [] нид [] грид [] пас ) 
-	рейд -> выбор( [] нид [] грид [] пас) ролл ( [] нид [] грид [] пас ) 
 ]]-- 
 local O = addonName .. "OptionsPanel"
 local OptionsPanel = CreateFrame("Frame", O)
@@ -53,8 +51,47 @@ TimeSlider:SetScript("OnValueChanged", function(self, value)
 	TempConfig.TIMEDELTA = value*60
 end)
 
+local function LootDecisionButton_OnClick(self)
+	local owner = self:GetParent();
+	local id = self:GetID();		
+	if ( id == owner.selectedRadioButton ) then
+		return;
+	else
+		owner.selectedRadioButton = id;
+	end
+	local radioButtons = owner.radioButtons;
+	local radioButton;
+	for i=1, #radioButtons do
+		radioButton = radioButtons[i];
+		if ( i == owner.selectedRadioButton ) then
+			radioButton:SetChecked(1);
+			radioButton:Disable();
+		else
+			radioButton:SetChecked(0);
+			radioButton:Enable();
+		end
+	end
+end
+
+local function CreateRadioButton(parent, marginx, marginy, text)
+	parent.radiocounter = parent.radiocounter and parent.radiocounter + 1 or 1;
+	
+	local cb = CreateFrame("CheckButton", "$parentRadioButton"..parent.radiocounter,  parent, "UIRadioButtonTemplate")
+	cb:SetID( parent.radiocounter )
+	cb:SetPoint("LEFT", parent, marginx, marginy)
+	cb:SetScript("OnClick", LootDecisionButton_OnClick)	
+	
+	local label = cb:CreateFontString("$parentText", "BACKGROUND", "GameFontNormal")
+	label:SetPoint("LEFT", cb, "RIGHT", 5, 0)
+	label:SetText(L[text])
+	
+	return cb
+end
+
+
+
 local function CreateCheckbox(name, parent, marginx, marginy, text)
-	local cb = CreateFrame("CheckButton", parent:GetName()..name,  parent, "OptionsCheckButtonTemplate")
+	local cb = CreateFrame("CheckButton", "$parent"..name,  parent, "OptionsCheckButtonTemplate")
 	cb:SetPoint("LEFT", parent, marginx, marginy)
 	_G[cb:GetName().."Text"]:SetText(L[text])
 	cb:SetScript("OnClick", function(self)
@@ -69,39 +106,32 @@ local function CreateLabel(parent, marginx, marginy, text)
 	label:SetPoint("LEFT", parent, marginx, marginy)
 end
 
+
 -- Party and Raid loot decision hiding 
 local PartyOptionPanel = CreateFrame("Frame", O.."PartyOptionsPanel",  OptionsPanel, "OptionsBoxTemplate")
 PartyOptionPanel:SetWidth(590)
-PartyOptionPanel:SetHeight(90) 
+PartyOptionPanel:SetHeight(70) 
 _G[PartyOptionPanel:GetName().."Title"]:SetText(L["partylootheader"])
-CreateLabel(PartyOptionPanel, 8, 30, L["decision"])
-CreateLabel(PartyOptionPanel, 8, -10, L["roll"])
-
-CreateCheckbox("wdis", PartyOptionPanel, 5, 11, L["disenchant"])
-CreateCheckbox("wneed", PartyOptionPanel, 150, 11, L["need"])
-CreateCheckbox("wgreed", PartyOptionPanel, 295, 11, L["greed"])
-CreateCheckbox("wpass", PartyOptionPanel, 440, 11, L["pass"])
-
-CreateCheckbox("wrdis", PartyOptionPanel, 5, -28, L["disenchant"])
-CreateCheckbox("wrneed", PartyOptionPanel, 150, -28, L["need"])
-CreateCheckbox("wrgreed", PartyOptionPanel, 295, -28, L["greed"])
-
+CreateLabel(PartyOptionPanel, 8, 25, L["decision"])
+PartyOptionPanel.radioButtons = {
+	CreateRadioButton(PartyOptionPanel, 12, 8, L["showall"]), 
+	CreateRadioButton(PartyOptionPanel, 180, 8, L["showneed"]),
+	CreateRadioButton(PartyOptionPanel, 400, 8, L["hideall"]), 
+}
+CreateCheckbox("phideroll", PartyOptionPanel, 10, -20, L["hiderolls"])
 
 local RaidOptionPanel = CreateFrame("Frame", O.."RaidOptionsPanel",  OptionsPanel, "OptionsBoxTemplate")
 RaidOptionPanel:SetWidth(590)
-RaidOptionPanel:SetHeight(90) 
+RaidOptionPanel:SetHeight(70) 
 _G[RaidOptionPanel:GetName().."Title"]:SetText(L["raidlootheader"])
-CreateLabel(RaidOptionPanel, 8, 30, L["decision"])
-CreateLabel(RaidOptionPanel, 8, -10, L["roll"])
+CreateLabel(RaidOptionPanel, 8, 25, L["decision"])
+RaidOptionPanel.radioButtons = {
+	CreateRadioButton(RaidOptionPanel, 12, 8, L["showall"]),
+	CreateRadioButton(RaidOptionPanel, 180, 8, L["showneed"]),
+	CreateRadioButton(RaidOptionPanel, 400, 8, L["hideall"]),
+}
+CreateCheckbox("rhideroll", RaidOptionPanel, 10, -20, L["hiderolls"])
 
-CreateCheckbox("rdis", RaidOptionPanel, 5, 11, L["disenchant"])
-CreateCheckbox("rneed", RaidOptionPanel, 150, 11, L["need"])
-CreateCheckbox("rgreed", RaidOptionPanel, 295, 11, L["greed"])
-CreateCheckbox("rpass", RaidOptionPanel, 440, 11, L["pass"])
-
-CreateCheckbox("rrdis", RaidOptionPanel, 5, -28, L["disenchant"])
-CreateCheckbox("rrneed", RaidOptionPanel, 150, -28, L["need"])
-CreateCheckbox("rrgreed", RaidOptionPanel, 295, -28, L["greed"])
 
 
 --[[ Control placement ]]--
@@ -113,34 +143,23 @@ TimeSlider:SetPoint("TOPLEFT", LevelSlider, "BOTTOMLEFT", 0, -28)
 PartyOptionPanel:SetPoint("TOPLEFT", TimeSlider, "BOTTOMLEFT", 0, -30)
 RaidOptionPanel:SetPoint("TOPLEFT", PartyOptionPanel, "BOTTOMLEFT", 0, -24)
 
---[[ 
-/run SimplestAntispamOptionsPanelPartyOptionsPanelwneed:SetPoint("LEFT", SimplestAntispamOptionsPanelPartyOptionsPanel, 150, 0)
-/run print(SimplestAntispamOptionsPanelWGreed:GetPoint())
-/run print(SimplestAntispamOptionsPanelPartyOptionsPanel:GetPoint())
-/run print(SimplestAntispamOptionsPanelRaidOptionsPanel:SetHeight(90))
-
-]]--
 
 OptionsPanel.refresh = function()
 	TempConfig = CopyTable(SimplestAntispamCharacterDB)
+	
 	Enable:SetChecked(TempConfig.enabled)
 	LevelSlider:SetValue(TempConfig.LEVEL)
 	TimeSlider:SetValue(TempConfig.TIMEDELTA / 60)
 	
-	for k,v in pairs (TempConfig.loot) do
-		local cb = _G[RaidOptionPanel:GetName()..k]
-		if ( cb ) then 
-			cb:SetChecked(v)
-		else 
-			cb = _G[PartyOptionPanel:GetName()..k]
-			cb:SetChecked(v)
-		end		
-	end
+	LootDecisionButton_OnClick(PartyOptionPanel.radioButtons[TempConfig.loot.ploot])
+	_G[PartyOptionPanel:GetName().."phideroll"]:SetChecked(L[TempConfig.loot.phideroll])
+	
+	LootDecisionButton_OnClick(RaidOptionPanel.radioButtons[TempConfig.loot.rloot])
+	_G[RaidOptionPanel:GetName().."rhideroll"]:SetChecked(L[TempConfig.loot.rhideroll])
 end
 
 OptionsPanel.default = function() 
 	TempConfig = CopyTable(SimplestAntispam.defaults)
-	TempConfig.loot = CopyTable(SimplestAntispam.defaults.loot)
 end
 
 OptionsPanel.okay = function()
@@ -152,8 +171,9 @@ OptionsPanel.okay = function()
 		end
 	end
 	
+	TempConfig.loot.rloot = RaidOptionPanel.selectedRadioButton
+	TempConfig.loot.ploot = PartyOptionPanel.selectedRadioButton
 	SimplestAntispamCharacterDB = CopyTable(TempConfig)
-	SimplestAntispamCharacterDB.loot = CopyTable(TempConfig.loot)
 end
 
 
