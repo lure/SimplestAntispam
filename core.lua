@@ -1,11 +1,16 @@
 ﻿--[[ 
 	blocks repeating messages, allowing it appear with 1 min interval. 
+	'seen' table was moved to SimplestAntispamCharacterDB in order to clean added by addon friends after 
+	spirituous disconnect or interface reloading
+	
+	Known bugs: 		
+		If enemy faction player was added to 'seen' there are no chance it will be ever cleared except reload ui / relogin
 ]] --
 local addonName, ptable = ...
 local L = ptable.L
 
 SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":",    	--throttler	  
-				    seen = {}, banned = {},  allowed = {}, isBattleField = false, lastFriendsCount=0,	--lowlevel filter
+				    banned = {},  allowed = {}, isInstance = false, lastFriendsCount=0,	--lowlevel filter
 					
 					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true,
 								loot={ploot=1, phideroll=false,
@@ -32,16 +37,37 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 	if (SimplestAntispamCharacterDB.enabled) then
 		SimplestAntispam:Enable()
 	end
+	
+	-- initializing seen table.
+	if not SimplestAntispamCharacterDB.seen then 
+		SimplestAntispamCharacterDB.seen = {} 
+	else
+		for name in pairs(SimplestAntispamCharacterDB.seen) do
+			--Antispam currently adds guys from instance group to seen list that is wrong. 
+			if (not name:match("(.+)-(.+)") and (GetFriendInfo(name)) ) then
+				RemoveFriend(name)
+			end
+		end
+		wipe(SimplestAntispamCharacterDB.seen)
+	end
 end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
-	SimplestAntispam.isBattlefield = GetNumBattlefieldStats() > 0
-	for i=1,NUM_CHAT_WINDOWS do
-		local frame = _G["ChatFrame"..i]
-		if (frame ~= COMBATLOG) and frame.spamtable then 
-			wipe(frame.spamtable)
+	-- no reason to keep possible stale data 
+	wipe(SimplestAntispamCharacterDB.seen)
+	
+	--Don't clear any tables on enter or exit BG
+	if (not SimplestAntispam.isInstance) and (IsInInstance() == 1) then 
+		for i = 1, NUM_CHAT_WINDOWS do
+			local frame = _G["ChatFrame"..i]
+			if (frame ~= COMBATLOG) and frame.spamtable then 
+				wipe(frame.spamtable)
+			end
 		end
-	end	
+	end
+	
+	--flag used to disable antispam on BG
+	SimplestAntispam.isInstance = IsInInstance() == 1	
 end
 
 SimplestAntispam.frame:SetScript("OnEvent", function(self, event, ...)
@@ -80,6 +106,7 @@ end
 
 
 --[[ LOW LEVEL SPAM REMOVER ]]--
+-- InitAllowed tracks friend list updates made by player. If any adds new names to allowed list
 function SimplestAntispam:InitAllowed(clean)
 	if ( clean ) then
 		wipe(self.allowed)
@@ -97,24 +124,26 @@ end
 
 SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 
-	if (SimplestAntispamCharacterDB.NeedInitialization) then 
+	if (SimplestAntispamCharacterDB.NeedInitialization) then
 		SimplestAntispam:InitAllowed(true)
 		SimplestAntispamCharacterDB.NeedInitialization = false
-	end 
-	
-	--not our call.  User added a friend manually
-	if not next(SimplestAntispam.seen) and ( SimplestAntispam.lastFriendsCount ~= GetNumFriends() )then
-		SimplestAntispam:InitAllowed(false)
-		return 
 	end
-	
-	for name,_ in pairs(SimplestAntispam.seen) do 
+
+	--not our call.  User added a friend manually
+	if not next(SimplestAntispamCharacterDB.seen) and ( SimplestAntispam.lastFriendsCount ~= GetNumFriends() )then
+		SimplestAntispam:InitAllowed(false)
+		return
+	end
+
+	for name,_ in pairs(SimplestAntispamCharacterDB.seen) do
 		local name, level = GetFriendInfo(name)
-		if ( name ) then 
-			if (not SimplestAntispam.allowed[name]) and (not SimplestAntispam.banned[name]) then 
-				RemoveFriend(name)		
+		if ( name ) then
+			if (not SimplestAntispam.allowed[name]) and (not SimplestAntispam.banned[name]) then
+				RemoveFriend(name)
 			end
-			if (level < SimplestAntispamCharacterDB.LEVEL) then 
+			
+			-- right after remove call is made, continue to consider what to do with a person
+			if (level < SimplestAntispamCharacterDB.LEVEL) then
 				SimplestAntispam.banned[name] = ""
 			else
 				SimplestAntispam.allowed[name] = level -- no real reason to save level here, but why not?
@@ -124,7 +153,7 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 end
 
 local function myChatFilter(self, event, msg, author, ...)
-	if #author==0 or SimplestAntispam.isBattleField or SimplestAntispamCharacterDB.LEVEL == 0 then
+	if #author==0 or SimplestAntispam.isInstance or SimplestAntispamCharacterDB.LEVEL == 0 then
 		return false, msg, author, ...
 	end 
 
@@ -136,14 +165,14 @@ local function myChatFilter(self, event, msg, author, ...)
 
 	-- maybe player just added this guy to the list manually. 
 	local name, level = GetFriendInfo(author)
-	if ( name ) and ( not SimplestAntispam.seen[author] ) then 
+	if ( name ) and ( not SimplestAntispamCharacterDB.seen[author] ) then 
 		SimplestAntispam.allowed[author] = level
 		return false, msg, author, ...
 	end
 
 	--UnitLevel usually doesn't work 
-	if not SimplestAntispam.seen[author] then 		
-		SimplestAntispam.seen[author]=""
+	if (not SimplestAntispamCharacterDB.seen[author]) and (not author:match("(.+)-(.+)"))then
+		SimplestAntispamCharacterDB.seen[author] = ""
 		AddFriend(author)
 	end
 	return false, msg, author, ...
@@ -151,20 +180,20 @@ end
 
 -- no need to form special string and guess about string declision!!! 'format' from wow lua does it automatically 	
 local function myErrorFilter(self, event, msg, author, ...)
-	if msg == ERR_FRIEND_WRONG_FACTION and next(SimplestAntispam.seen) then --note that next(table)  result may be wrongly intrepreted for table[false] = "someval"
+	if msg == ERR_FRIEND_WRONG_FACTION and next(SimplestAntispamCharacterDB.seen) then --note that next(table)  result may be wrongly intrepreted for table[false] = "someval"
 		return true
 	end
-	for k in pairs(SimplestAntispam.seen) do	
+	for k in pairs(SimplestAntispamCharacterDB.seen) do
 		if msg == format(ERR_FRIEND_ADDED_S, k) then
 			return true
 		end
-		if msg == format(ERR_FRIEND_OFFLINE_S, k) then 
+		if msg == format(ERR_FRIEND_OFFLINE_S, k) then
 			return true
 		end
-		if msg == format(ERR_FRIEND_REMOVED_S, k) then 
-			SimplestAntispam.seen[k] = nil
+		if msg == format(ERR_FRIEND_REMOVED_S, k) then
+			SimplestAntispamCharacterDB.seen[k] = nil
 			return true
-		end 
+		end
 	end
 	return false, msg, author, ...
 end
@@ -204,7 +233,7 @@ function SimplestAntispam:Disable()
 end
 
 --[[ LOOT DISTRIBUTION MESSAGES HIDER ]]--
- local function SystemLootFilter(self, event, msg, author, ...)
+local function SystemLootFilter(self, event, msg, author, ...)
 	if (strfind(msg, L["SELF"]) or strfind(msg, L["SELF_AP"])) then 
 		return false, msg, author, ...
 	end 
@@ -237,6 +266,7 @@ if LibStub then
 	local LDB = LibStub:GetLibrary("LibDataBroker-1.1", true)
 	if LDB then 
 		local dataObj = LDB:NewDataObject("SimplestAntispam", {
+			label = addonName,
 			type = "launcher",
 			icon = "Interface\\CHATFRAME\\UI-ChatWhisperIcon",
 			OnClick = function(clickedframe, button)
@@ -254,7 +284,7 @@ end
 https://github.com/Xruptor/xanMiniRolls/issues/1
 debug shortcuts =)
 /run for i,k in pairs(SimplestAntispam.banned) do print(i) end	
-/run for i,k in pairs(SimplestAntispam.seen) do print(i) end	
+/run for i,k in pairs(SimplestAntispamCharacterDB.seen) do print(i) end	
 /run for i,k in pairs(SimplestAntispam.allowed) do print(i) end	
 |Hlcopy|h01:45:04|h |Hchannel:channel:4|h[4]|h |Hplayer:Онеоне:817:CHANNEL:4|h[|cff0070ddОнеоне|r]|h: |TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|t|TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|tВ статик ДД10 3\8 Хм (рт пн-чт с 20.45-00) нид: ШП 390+ил - вступление в гильдию(25лвл) |TInterface\TargetingFrame\UI-RaidTargetingIcon_1:0|t™
 ]]--
