@@ -135,8 +135,8 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 		return
 	end
 
-	for name,_ in pairs(SimplestAntispamCharacterDB.seen) do
-		local name, level = GetFriendInfo(name)
+	for seenName,_ in pairs(SimplestAntispamCharacterDB.seen) do
+		local name, level = GetFriendInfo(seenName)
 		if ( name ) then
 			if (not SimplestAntispam.allowed[name]) and (not SimplestAntispam.banned[name]) then
 				RemoveFriend(name)
@@ -148,7 +148,10 @@ SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
 			else
 				SimplestAntispam.allowed[name] = level -- no real reason to save level here, but why not?
 			end		
-		end 
+		else
+			-- looks like we got oppsite faction (dalaran, yelling maybe)
+			SimplestAntispam.allowed[seenName] = nil
+		end
 	end	
 end
 
