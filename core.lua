@@ -54,7 +54,7 @@ end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
 	-- no reason to keep possible stale data 
-	wipe(SimplestAntispamCharacterDB.seen)
+	--wipe(SimplestAntispamCharacterDB.seen)
 	
 	--Don't clear any tables on enter or exit BG
 	if (not SimplestAntispam.isInstance) and (IsInInstance() == 1) then 
