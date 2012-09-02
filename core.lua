@@ -235,34 +235,6 @@ function SimplestAntispam:Disable()
 	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 end
 
---[[ LOOT DISTRIBUTION MESSAGES HIDER ]]--
-local function SystemLootFilter(self, event, msg, author, ...)
-	if (strfind(msg, L["SELF"]) or strfind(msg, L["SELF_AP"])) then 
-		return false, msg, author, ...
-	end 
-	
-	local c = SimplestAntispamCharacterDB.loot	
-	local loot, hideroll, filter
-	if ( GetNumRaidMembers() > 0 ) then  
-		loot, hideroll, filter = c.rloot, c.rhideroll, true  
-	elseif ( GetNumPartyMembers() > 0 ) then
-		loot, hideroll, filter = c.ploot, c.phideroll, true
-	end 
-	
-	if ( filter ) then 
-		local decisionButNotNeed = not not (strfind(msg, L["CHOICE_DE"]) or strfind(msg, L["CHOICE_GR"]) or  strfind(msg, L["CHOICE_PA"])) 
-		if ( loot == 2 and decisionButNotNeed) or 
-		   ( loot == 3 and (decisionButNotNeed or strfind(msg, L["CHOICE_NE"])) ) then
-			return true 
-		end
-		if ( hideroll and ( strfind(msg, L["ROLL_DE"]) or strfind(msg, L["ROLL_GR"]) or strfind(msg, L["ROLL_NE"]) ) ) then 
-			return true
-		end		
-	else 
-		return false, msg, author, ...
-	end
-end
-ChatFrame_AddMessageEventFilter("CHAT_MSG_LOOT", SystemLootFilter)
 
 --[[ LDB calls ]]--
 if LibStub then
