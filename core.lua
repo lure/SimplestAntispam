@@ -214,11 +214,15 @@ function SimplestAntispam:Enable()
 		end
 	end
 
+	self:EnableLevelFilter()
+end
+
+function SimplestAntispam:EnableLevelFilter()
 	self.frame:RegisterEvent("FRIENDLIST_UPDATE")				
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
-	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)	
-end 
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)
+end
 
 function SimplestAntispam:Disable()
 	self.frame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -229,12 +233,15 @@ function SimplestAntispam:Disable()
 		end
 	end	
 
+	self:DisableLevelFilter()
+end
+
+function SimplestAntispam:DisableLevelFilter()
 	self.frame:UnregisterEvent("FRIENDLIST_UPDATE")
 	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
 	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_YELL", myChatFilter)	
 	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
 end
-
 
 --[[ LDB calls ]]--
 if LibStub then

@@ -78,11 +78,16 @@ OptionsPanel.okay = function()
 		else 
 			SimplestAntispam:Disable()
 		end
-	end
+	end	
 	
-	TempConfig.loot.rloot = RaidOptionPanel.selectedRadioButton
-	TempConfig.loot.ploot = PartyOptionPanel.selectedRadioButton
+	if (TempConfig.enabled and (TempConfig.LEVEL > 0 and SimplestAntispamCharacterDB.LEVEL == 0)) then 
+		SimplestAntispam:EnableLevelFilter()
+	else 
+		SimplestAntispam:DisableLevelFilter()
+	end 
+	
 	SimplestAntispamCharacterDB = CopyTable(TempConfig)
+
 end
 
 
