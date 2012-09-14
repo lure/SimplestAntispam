@@ -12,7 +12,7 @@ local L = ptable.L
 SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":",    	--throttler	  
 				    banned = {},  allowed = {}, isInstance = false, lastFriendsCount=0,	--lowlevel filter
 					
-					defaults = {TIMEDELTA = 120, LEVEL = 10, enabled = true,
+					defaults = {TIMEDELTA = 120, LEVEL = 0, enabled = true,
 								loot={ploot=1, phideroll=false,
 									  rloot=1, rhideroll=false}
 								}}
