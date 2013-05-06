@@ -214,7 +214,7 @@ function SimplestAntispam:Enable()
 		end
 	end
 
-	self:EnableLevelFilter()
+	--self:EnableLevelFilter()
 end
 
 function SimplestAntispam:EnableLevelFilter()
