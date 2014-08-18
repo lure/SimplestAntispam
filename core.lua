@@ -8,8 +8,9 @@
 ]] --
 local addonName, ptable = ...
 local L = ptable.L
+local _ = 0
 
-SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player")..":",    	--throttler	  
+SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player").."-.+:",    	--throttler	  .."-"..GetRealmName():gsub("%s", "")
 				    banned = {},  allowed = {}, isInstance = false, lastFriendsCount=0,	--lowlevel filter
 					
 					defaults = {TIMEDELTA = 120, LEVEL = 0, enabled = true,
@@ -79,8 +80,7 @@ end)
 -- copy this to chat to see stored messages /run table.foreach(SimplestAntispam.spamtable, print) 
 local YELLPATTERN = CHAT_YELL_GET:format("|r]|h").."(.+)" --"|r]|h кричит: (.+)"
 local function hook_addMessage(self, text, ...)
-
-	if text:match(SimplestAntispam.player) then
+	if text:match(SimplestAntispam.player) then	
 		self:LurUI_AddMessage(text, ...)
 		return
 	end
@@ -110,7 +110,7 @@ end
 function SimplestAntispam:InitAllowed(clean)
 	if ( clean ) then
 		wipe(self.allowed)
-		self.allowed[UnitName("player")] = 85
+		self.allowed[UnitName("player")] = 100
 	end
 	
 	self.lastFriendsCount = GetNumFriends()

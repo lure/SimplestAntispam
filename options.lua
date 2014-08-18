@@ -1,6 +1,6 @@
 ﻿local addonName, ptable = ...
 local L = ptable.L
-local TempConfig = nil 
+local TempConfig = nil
 --[[ 
 	Thanks to LoseControl author Kouri for ideas and direction 
 	http://forums.wowace.com/showthread.php?t=15763
