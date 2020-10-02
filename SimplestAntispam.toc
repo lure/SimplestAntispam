@@ -1,4 +1,4 @@
-﻿## Interface: 70000
+﻿## Interface: 80300
 ## Title: SimplestAntispam
 ## Version: 1.0
 ## Author: Lur
