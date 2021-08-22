@@ -34,7 +34,7 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 	end
 	
 	SimplestAntispamCharacterDB.NeedInitialization = true
-	ShowFriends()
+	C_FriendList.ShowFriends()
 	if (SimplestAntispamCharacterDB.enabled) then
 		SimplestAntispam:Enable()
 	end
