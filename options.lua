@@ -1,6 +1,7 @@
 ﻿local addonName, ptable, _ = ...
 local L = ptable.L
 local TempConfig = nil
+local interface10 = select(4, GetBuildInfo()) >= 100000
 --[[ 
 	Thanks to LoseControl author Kouri for ideas and direction 
 	http://forums.wowace.com/showthread.php?t=15763
@@ -19,7 +20,7 @@ local subText = OptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlight
 subText:SetText(notes)
 
 -- 'Enable' CheckBox
-local Enable = CreateFrame("CheckButton", O.."Enable", OptionsPanel, "OptionsCheckButtonTemplate")
+local Enable = CreateFrame("CheckButton", O.."Enable", OptionsPanel, interface10 and "UICheckButtonTemplate" or "OptionsCheckButtonTemplate")
 _G[Enable:GetName().."Text"]:SetText(L["enabled"])
 Enable:SetScript("OnClick", function(self) 
 	TempConfig.enabled = self:GetChecked() == 1

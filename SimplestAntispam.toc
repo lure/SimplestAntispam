@@ -1,6 +1,6 @@
-## Interface: 90105
+## Interface: 100000
 ## Title: SimplestAntispam
-## Version: 1.0
+## Version: 1.5
 ## Author: Lur
 ## Notes: Removes repeating messages, raid target icon from general channels and spam from low-level characters
 ## Notes-ruRU: Вырезает из чата повторяющиеся сообщение, иконки целей и спам от низкоуровневых персонажей

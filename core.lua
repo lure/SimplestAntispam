@@ -25,23 +25,23 @@ SlashCmdList.SIMPLESTANTISPAM = SimplestAntispam.ConsoleCommand
 SLASH_SIMPLESTANTISPAM1 = '/sa'
 
 SimplestAntispam.frame:RegisterEvent("PLAYER_LOGIN")
-SimplestAntispam.frame.PLAYER_LOGIN = function(...)	
-	if (SimplestAntispamCharacterDB == nil) then 
-		_G.SimplestAntispamCharacterDB = CopyTable(SimplestAntispam.defaults)			
+SimplestAntispam.frame.PLAYER_LOGIN = function(...)
+	if (SimplestAntispamCharacterDB == nil) then
+		_G.SimplestAntispamCharacterDB = CopyTable(SimplestAntispam.defaults)
 	end
-	if not SimplestAntispamCharacterDB.loot then 
+	if not SimplestAntispamCharacterDB.loot then
 		SimplestAntispamCharacterDB.loot = CopyTable(SimplestAntispam.defaults.loot)
 	end
-	
+
 	SimplestAntispamCharacterDB.NeedInitialization = true
 	C_FriendList.ShowFriends()
 	if (SimplestAntispamCharacterDB.enabled) then
 		SimplestAntispam:Enable()
 	end
-	
+
 	-- initializing seen table.
-	if not SimplestAntispamCharacterDB.seen then 
-		SimplestAntispamCharacterDB.seen = {} 
+	if not SimplestAntispamCharacterDB.seen then
+		SimplestAntispamCharacterDB.seen = {}
 	else
 		for name in pairs(SimplestAntispamCharacterDB.seen) do
 			--Antispam currently adds guys from instance group to seen list that is wrong. 
@@ -58,17 +58,17 @@ SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
 	--wipe(SimplestAntispamCharacterDB.seen)
 	
 	--Don't clear any tables on enter or exit BG
-	if (not SimplestAntispam.isInstance) and (IsInInstance() == 1) then 
+	if (not SimplestAntispam.isInstance) and (IsInInstance() == 1) then
 		for i = 1, NUM_CHAT_WINDOWS do
 			local frame = _G["ChatFrame"..i]
-			if (frame ~= COMBATLOG) and frame.spamtable then 
+			if (frame ~= COMBATLOG) and frame.spamtable then
 				wipe(frame.spamtable)
 			end
 		end
 	end
 	
 	--flag used to disable antispam on BG
-	SimplestAntispam.isInstance = IsInInstance() == 1	
+	SimplestAntispam.isInstance = IsInInstance() == 1
 end
 
 SimplestAntispam.frame:SetScript("OnEvent", function(self, event, ...)
@@ -80,7 +80,7 @@ end)
 -- copy this to chat to see stored messages /run table.foreach(SimplestAntispam.spamtable, print) 
 local YELLPATTERN = CHAT_YELL_GET:format("|r]|h").."(.+)" --"|r]|h кричит: (.+)"
 local function hook_addMessage(self, text, ...)
-	if text:match(SimplestAntispam.player) then	
+	if text:match(SimplestAntispam.player) then
 		self:LurUI_AddMessage(text, ...)
 		return
 	end
@@ -162,7 +162,7 @@ local function myChatFilter(self, event, msg, author, ...)
 
 	if (SimplestAntispam.banned[author]) then 
 		return true
-	elseif (SimplestAntispam.allowed[author]) then 
+	elseif (SimplestAntispam.allowed[author]) then
 		return false, msg, author, ...
 	end
 
