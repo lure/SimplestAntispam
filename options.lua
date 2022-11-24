@@ -91,5 +91,4 @@ OptionsPanel.okay = function()
 
 end
 
-
-InterfaceOptions_AddCategory(OptionsPanel)
+ptable.SimplestAntispamOptionsPanel = InterfaceOptions_AddCategory(OptionsPanel)

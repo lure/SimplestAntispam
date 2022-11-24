@@ -252,11 +252,11 @@ if LibStub then
 			type = "launcher",
 			icon = "Interface\\CHATFRAME\\UI-ChatWhisperIcon",
 			OnClick = function(clickedframe, button)
-				if InterfaceOptionsFrame:IsVisible() then 
-					InterfaceOptionsFrameCancel:Click()			
-				else
-					InterfaceOptionsFrame_OpenToCategory(_G["SimplestAntispamOptionsPanel"])
-				end
+				-- if InterfaceOptionsFrame:IsVisible() then 
+				-- 	InterfaceOptionsFrameCancel:Click()			
+				-- else
+					Settings.OpenToCategory(addonName)
+				-- end
 			end,
 		})
 	end
