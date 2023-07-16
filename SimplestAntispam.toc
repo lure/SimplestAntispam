@@ -9,6 +9,8 @@
 ## SavedVariablesPerCharacter: SimplestAntispamCharacterDB
 ## X-Date: 2012-03-03
 ## X-Category: Chat
+## IconTexture: Interface\AddOns\SimplestAntispam\Icon.tga
+
 
 localization.lua
 core.lua
