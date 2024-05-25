@@ -1,4 +1,4 @@
-## Interface: 100200
+## Interface: 100207
 ## Title: SimplestAntispam
 ## Version: 3.0
 ## Author: Lur
