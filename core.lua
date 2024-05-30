@@ -10,13 +10,19 @@ local addonName, ptable = ...
 local L = ptable.L
 local _ = 0
 
-SimplestAntispam = {frame = CreateFrame("Frame"), player = "|Hplayer:"..UnitName("player").."-.+:",    	--throttler	  .."-"..GetRealmName():gsub("%s", "")
-				    banned = {},  allowed = {}, isInstance = false, lastFriendsCount=0,	--lowlevel filter
-					
-					defaults = {TIMEDELTA = 120, LEVEL = 0, enabled = true,
-								loot={ploot=1, phideroll=false,
-									  rloot=1, rhideroll=false}
-								}}
+SimplestAntispam = {
+	frame = CreateFrame("Frame"),
+	player = "|Hplayer:"..UnitName("player").."-.+:", --throttler  .."-"..GetRealmName():gsub("%s", "")
+	banned = {},
+	allowed = {},
+	isInstance = false,
+	lastFriendsCount=0,	--lowlevel filter
+	defaults = {
+		TIMEDELTA = 120,
+		LEVEL = 0,
+		enabled = true,
+	}
+}
 				   
 function SimplestAntispam:ConsoleCommand(arg)
 	InterfaceOptionsFrame_OpenToCategory(_G["SimplestAntispamOptionsPanel"])
@@ -51,6 +57,7 @@ SimplestAntispam.frame.PLAYER_LOGIN = function(...)
 		end
 		wipe(SimplestAntispamCharacterDB.seen)
 	end
+	SimplestAntispam:LibDataStructure()
 end
 
 SimplestAntispam.frame.ZONE_CHANGED_NEW_AREA = function(...)
@@ -81,7 +88,7 @@ end)
 local YELLPATTERN = CHAT_YELL_GET:format("|r]|h").."(.+)" --"|r]|h кричит: (.+)"
 local function hook_addMessage(self, text, ...)
 	if text:match(SimplestAntispam.player) then
-		self:LurUI_AddMessage(text, ...)
+		self:_BlizzardAddMessage(text, ...)
 		return
 	end
 	if text:match("|Hchannel:channel") or text:match(":YELL|h") then
@@ -96,11 +103,11 @@ local function hook_addMessage(self, text, ...)
 			if (not value) or ((current-value) > SimplestAntispamCharacterDB.TIMEDELTA) then
 				self.spamtable[msg] = current
 				local txt = text:gsub("|T%S+|t", "")
-				self:LurUI_AddMessage(txt, ...)
+				self:_BlizzardAddMessage(txt, ...)
 			end
 		end
 	else
-		self:LurUI_AddMessage(text, ...)
+		self:_BlizzardAddMessage(text, ...)
 	end
 end
 
@@ -123,7 +130,6 @@ function SimplestAntispam:InitAllowed(clean)
 end
 
 SimplestAntispam.frame.FRIENDLIST_UPDATE= function(...)
-
 	if (SimplestAntispamCharacterDB.NeedInitialization) then
 		SimplestAntispam:InitAllowed(true)
 		SimplestAntispamCharacterDB.NeedInitialization = false
@@ -203,25 +209,15 @@ end
 
 --[[ ENABLE/DISABLE ]]--
 function SimplestAntispam:Enable()
-	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")		
-	-- handling every window except combat log
+	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	for i=1,NUM_CHAT_WINDOWS do
 		local frame = _G["ChatFrame"..i]
-		if (frame ~= COMBATLOG) then 
-			frame.LurUI_AddMessage=frame.AddMessage
+		if (frame ~= COMBATLOG) then
+			frame._BlizzardAddMessage = frame.AddMessage
 			frame.AddMessage = hook_addMessage
 			frame.spamtable = {}
 		end
-	end
-
-	--self:EnableLevelFilter()
-end
-
-function SimplestAntispam:EnableLevelFilter()
-	self.frame:RegisterEvent("FRIENDLIST_UPDATE")				
-	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
-	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
-	ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", myChatFilter)
+	end		
 end
 
 function SimplestAntispam:Disable()
@@ -229,36 +225,55 @@ function SimplestAntispam:Disable()
 	for i=1,NUM_CHAT_WINDOWS do
 		local frame = _G["ChatFrame"..i]
 		if (frame ~= COMBATLOG) then 
-			frame.AddMessage = frame.LurUI_AddMessage
+			frame.AddMessage = frame._BlizzardAddMessage
 		end
 	end	
-
-	self:DisableLevelFilter()
+	self:ToggleLevelFilter(false)
 end
 
-function SimplestAntispam:DisableLevelFilter()
-	self.frame:UnregisterEvent("FRIENDLIST_UPDATE")
-	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_CHANNEL", myChatFilter)
-	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_YELL", myChatFilter)	
-	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", myErrorFilter)
+
+function SimplestAntispam:ToggleLevelFilter(enabled)
+	local func
+	if enabled then
+		self.frame:RegisterEvent("FRIENDLIST_UPDATE")
+		func = ChatFrame_AddMessageEventFilter
+	else
+		self.frame:UnregisterEvent("FRIENDLIST_UPDATE")
+		func = ChatFrame_RemoveMessageEventFilter
+	end
+	func("CHAT_MSG_SYSTEM", myErrorFilter)
+	func("CHAT_MSG_CHANNEL", myChatFilter)
+	func("CHAT_MSG_YELL", myChatFilter)	
 end
 
---[[ LDB calls ]]--
-if LibStub then
-	local LDB = LibStub:GetLibrary("LibDataBroker-1.1", true)
-	if LDB then 
-		local dataObj = LDB:NewDataObject("SimplestAntispam", {
-			label = addonName,
+--[[
+	DATA BROKER STRUCTURES
+--]]
+-- see https://github.com/tekkub/libdatabroker-1-1/wiki/api
+function SimplestAntispam:LibDataStructure()
+	if not SimplestAntispam.ldb then
+		local LDB = LibStub:GetLibrary("LibDataBroker-1.1", true)
+		if LDB then
+			SimplestAntispam.ldb = LDB:NewDataObject("SimplestAntispam", {
 			type = "launcher",
-			icon = "Interface\\CHATFRAME\\UI-ChatWhisperIcon",
+			icon = "Interface\\AddOns\\SimplestAntispam\\Icon",
 			OnClick = function(clickedframe, button)
-				-- if InterfaceOptionsFrame:IsVisible() then 
-				-- 	InterfaceOptionsFrameCancel:Click()			
-				-- else
+				if SettingsPanel and SettingsPanel:IsVisible() then
+					HideUIPanel(GameMenuFrame)
+					HideUIPanel(SettingsPanel)
+				else
 					Settings.OpenToCategory(addonName)
-				-- end
+				end
 			end,
+			OnTooltipShow = function(tooltip)
+				tooltip:AddLine(addonName, 1, 1, 1)
+				tooltip:AddLine("This addon allows repeatable messages from the same player")
+				tooltip:AddLine("only once in a customizable while. The mesasges from characters below")
+				tooltip:AddLine("customizable levels may be ignored completely")
+				tooltip:AddLine("Left mouse button shows options.")				
+			end
 		})
+		end
 	end
 end
 

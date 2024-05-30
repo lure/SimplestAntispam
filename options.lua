@@ -3,9 +3,7 @@ local L = ptable.L
 local TempConfig = nil
 local interface10 = select(4, GetBuildInfo()) >= 100000
 --[[ 
-	Thanks to LoseControl author Kouri for ideas and direction 
-	http://forums.wowace.com/showthread.php?t=15763
-	http://www.wowwiki.com/UI_Object_UIDropDownMenu
+https://wowpedia.fandom.com/wiki/Using_the_Interface_Options_Addons_panel
 ]]-- 
 local O = addonName .. "OptionsPanel"
 local OptionsPanel = CreateFrame("Frame", O)
@@ -23,7 +21,7 @@ subText:SetText(notes)
 local Enable = CreateFrame("CheckButton", O.."Enable", OptionsPanel, interface10 and "UICheckButtonTemplate" or "OptionsCheckButtonTemplate")
 _G[Enable:GetName().."Text"]:SetText(L["enabled"])
 Enable:SetScript("OnClick", function(self) 
-	TempConfig.enabled = self:GetChecked() == 1
+	TempConfig.enabled = self:GetChecked()
 end)
 
 -- Slider helper function, thanks to Kollektiv, LoseControl
@@ -68,27 +66,20 @@ OptionsPanel.refresh = function()
 	TimeSlider:SetValue(TempConfig.TIMEDELTA / 60)
 end
 
-OptionsPanel.default = function() 
+OptionsPanel.default = function()
 	TempConfig = CopyTable(SimplestAntispam.defaults)
 end
 
-OptionsPanel.okay = function()
+OptionsPanel.okay = function()	
 	if (TempConfig.enabled ~= SimplestAntispamCharacterDB.enabled) then
 		if ( TempConfig.enabled ) then 
 			SimplestAntispam:Enable()
 		else 
 			SimplestAntispam:Disable()
 		end
-	end	
-	
-	if (TempConfig.enabled and (TempConfig.LEVEL > 0 and SimplestAntispamCharacterDB.LEVEL == 0)) then 
-		SimplestAntispam:EnableLevelFilter()
-	else 
-		SimplestAntispam:DisableLevelFilter()
-	end 
-	
+	end		
+	SimplestAntispam:ToggleLevelFilter(TempConfig.enabled and (TempConfig.LEVEL > 0 and SimplestAntispamCharacterDB.LEVEL == 0))	
 	SimplestAntispamCharacterDB = CopyTable(TempConfig)
-
 end
 
 ptable.SimplestAntispamOptionsPanel = InterfaceOptions_AddCategory(OptionsPanel)
