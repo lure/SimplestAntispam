@@ -1,85 +1,80 @@
-﻿local addonName, ptable, _ = ...
-local L = ptable.L
-local TempConfig = nil
-local interface10 = select(4, GetBuildInfo()) >= 100000
---[[ 
-https://wowpedia.fandom.com/wiki/Using_the_Interface_Options_Addons_panel
-]]-- 
-local O = addonName .. "OptionsPanel"
-local OptionsPanel = CreateFrame("Frame", O)
-OptionsPanel.name = addonName
--- Title
-local title = OptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-title:SetText(addonName)
--- Description
-local notes = GetAddOnMetadata(addonName, "Notes-" .. GetLocale())
-notes = notes or GetAddOnMetadata(addonName, "Notes")
-local subText = OptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-subText:SetText(notes)
+local addonName, private = ...
+local addon, L = SimplestAntispam, private.L
+local pending, refreshing = CopyTable(addon.defaults), false
+local panel = CreateFrame("Frame", addonName .. "OptionsPanel")
+panel.name = addonName
+panel:Hide()
 
--- 'Enable' CheckBox
-local Enable = CreateFrame("CheckButton", O.."Enable", OptionsPanel, interface10 and "UICheckButtonTemplate" or "OptionsCheckButtonTemplate")
-_G[Enable:GetName().."Text"]:SetText(L["enabled"])
-Enable:SetScript("OnClick", function(self) 
-	TempConfig.enabled = self:GetChecked()
+local function Save()
+	if not refreshing and SimplestAntispamCharacterDB then addon:ApplySettings(pending) end
+end
+
+local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+title:SetPoint("TOPLEFT", 16, -16)
+title:SetText(addonName)
+
+local description = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
+description:SetWidth(520)
+description:SetJustifyH("LEFT")
+description:SetText(C_AddOns.GetAddOnMetadata(addonName, "Notes-" .. GetLocale()) or
+	C_AddOns.GetAddOnMetadata(addonName, "Notes"))
+
+local enabled = CreateFrame("CheckButton", addonName .. "Enable", panel, "UICheckButtonTemplate")
+enabled:SetPoint("TOPLEFT", description, "BOTTOMLEFT", 0, -16)
+enabled.Text:SetText(L["enabled"])
+enabled:SetScript("OnClick", function(self)
+	pending.enabled = self:GetChecked()
+	Save()
 end)
 
--- Slider helper function, thanks to Kollektiv, LoseControl
-local function CreateSlider(text, parent, low, high, step)
-	local name = parent:GetName() .. text
-	local slider = CreateFrame("Slider", name, parent, "OptionsSliderTemplate")
+local function CreateSlider(suffix, label, low, high, key, multiplier)
+	local slider = CreateFrame("Slider", addonName .. suffix, panel, "UISliderTemplateWithLabels")
 	slider:SetWidth(300)
+	slider:SetHeight(17)
 	slider:SetMinMaxValues(low, high)
-	slider:SetValueStep(step)
-	--_G[name .. "Text"]:SetText(text)
-	_G[name .. "Low"]:SetText(low)
-	_G[name .. "High"]:SetText(high)
+	slider:SetValueStep(1)
+	slider:SetObeyStepOnDrag(true)
+	slider.Low:SetText(low)
+	slider.High:SetText(high)
+	slider:SetScript("OnValueChanged", function(self, value)
+		value = math.floor(value + 0.5)
+		self.Text:SetText(label .. ": " .. value)
+		pending[key] = value * multiplier
+		Save()
+	end)
 	return slider
 end
 
-local LZF = " %02d";
-local LevelSlider = CreateSlider(L["level"], OptionsPanel, 0, 85, 1)
-LevelSlider:SetScript("OnValueChanged", function(self, value)
-	_G[self:GetName() .. "Text"]:SetText(L["level"] .. LZF:format(value))
-	TempConfig.LEVEL = value
-end)
-local LZTF = " %02dmin";
-local TimeSlider = CreateSlider(L["timedelta"], OptionsPanel, 1, 60, 1)
-TimeSlider:SetScript("OnValueChanged", function(self, value)
-	_G[self:GetName() .. "Text"]:SetText(L["timedelta"] .. LZTF:format(value))
-	TempConfig.TIMEDELTA = value*60
-end)
+local level = CreateSlider("Level", L["level"], 0, GetMaxLevelForLatestExpansion(), "LEVEL", 1)
+level:SetPoint("TOPLEFT", enabled, "BOTTOMLEFT", 4, -32)
+local interval = CreateSlider("Interval", L["intervalMinutes"], 1, 60, "TIMEDELTA", 60)
+interval:SetPoint("TOPLEFT", level, "BOTTOMLEFT", 0, -48)
 
+local help = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+help:SetPoint("TOPLEFT", interval, "BOTTOMLEFT", 0, -32)
+help:SetWidth(520)
+help:SetJustifyH("LEFT")
+help:SetText(L["levelHelp"])
 
---[[ Control placement ]]--
-title:SetPoint("TOPLEFT", 16, -16)
-subText:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-Enable:SetPoint("TOPLEFT", subText, "BOTTOMLEFT", 0, -16)
-LevelSlider:SetPoint("TOPLEFT", Enable, "BOTTOMLEFT", 0, -24)
-TimeSlider:SetPoint("TOPLEFT", LevelSlider, "BOTTOMLEFT", 0, -28)
-
-OptionsPanel.refresh = function()
-	TempConfig = CopyTable(SimplestAntispamCharacterDB)
-	
-	Enable:SetChecked(TempConfig.enabled)
-	LevelSlider:SetValue(TempConfig.LEVEL)
-	TimeSlider:SetValue(TempConfig.TIMEDELTA / 60)
+function panel:OnRefresh()
+	refreshing = true
+	local db = SimplestAntispamCharacterDB or addon.defaults
+	pending = { enabled = db.enabled, LEVEL = db.LEVEL, TIMEDELTA = db.TIMEDELTA }
+	enabled:SetChecked(pending.enabled)
+	level:SetValue(pending.LEVEL)
+	interval:SetValue(pending.TIMEDELTA / 60)
+	-- SetValue need not fire OnValueChanged when the value is unchanged.
+	level.Text:SetText(L["level"] .. ": " .. pending.LEVEL)
+	interval.Text:SetText(L["intervalMinutes"] .. ": " .. math.floor(pending.TIMEDELTA / 60 + 0.5))
+	refreshing = false
 end
 
-OptionsPanel.default = function()
-	TempConfig = CopyTable(SimplestAntispam.defaults)
+function panel:OnDefault()
+	if SimplestAntispamCharacterDB then addon:ApplySettings(addon.defaults) end
+	self:OnRefresh()
 end
 
-OptionsPanel.okay = function()	
-	if (TempConfig.enabled ~= SimplestAntispamCharacterDB.enabled) then
-		if ( TempConfig.enabled ) then 
-			SimplestAntispam:Enable()
-		else 
-			SimplestAntispam:Disable()
-		end
-	end		
-	SimplestAntispam:ToggleLevelFilter(TempConfig.enabled and (TempConfig.LEVEL > 0 and SimplestAntispamCharacterDB.LEVEL == 0))	
-	SimplestAntispamCharacterDB = CopyTable(TempConfig)
-end
-
-ptable.SimplestAntispamOptionsPanel = InterfaceOptions_AddCategory(OptionsPanel)
+panel:SetScript("OnShow", panel.OnRefresh)
+addon.category = Settings.RegisterCanvasLayoutCategory(panel, addonName)
+Settings.RegisterAddOnCategory(addon.category)

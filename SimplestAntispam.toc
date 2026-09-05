@@ -1,6 +1,6 @@
-## Interface: 100207
+## Interface: 120000, 120001, 120100
 ## Title: SimplestAntispam
-## Version: 3.0
+## Version: 4.0
 ## Author: Lur
 ## Notes: Removes repeating messages, raid target icon from general channels and spam from low-level characters
 ## Notes-ruRU: Вырезает из чата повторяющиеся сообщение, иконки целей и спам от низкоуровневых персонажей
@@ -12,6 +12,9 @@
 ## IconTexture: Interface\AddOns\SimplestAntispam\Icon.tga
 
 
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 localization.lua
 core.lua
 options.lua
