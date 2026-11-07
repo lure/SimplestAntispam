@@ -1,6 +1,6 @@
 ## Interface: 120000, 120001, 120100, 120105
 ## Title: SimplestAntispam
-## Version: 4.0
+## Version: 4.1
 ## Author: Lur
 ## Notes: Removes repeating messages, raid target icon from general channels and spam from low-level characters
 ## Notes-ruRU: Вырезает из чата повторяющиеся сообщение, иконки целей и спам от низкоуровневых персонажей
